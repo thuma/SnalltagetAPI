@@ -31,11 +31,31 @@ curl_setopt($ch, CURLOPT_POSTFIELDS, '{"DepartureLocationId":1,"DepartureLocatio
 curl_setopt($ch, CURLOPT_POST, TRUE);
 $triplist = json_decode(curl_exec($ch));
 
+$list = "";
+$comma = "";
+foreach($triplist->JourneyAdvices as $refid){
+$list = $list.$comma.$refid->JourneyConnectionReference;
+$comma = ",";
+}
+
 curl_setopt($ch, CURLOPT_URL, 'https://boka.snalltaget.se/api/journeyadvices/lowestprices');
-curl_setopt($ch, CURLOPT_POSTFIELDS, '{"TimetableId":"'.$triplist->Id.'","JourneyConnectionReferences":['.$triplist->JourneyAdvices[0]->JourneyConnectionReference.']}');
-print curl_exec($ch);
+curl_setopt($ch, CURLOPT_POSTFIELDS, '{"TimetableId":"'.$triplist->Id.'","JourneyConnectionReferences":['.$list.']}');
+$price = json_decode(curl_exec($ch));
+
+$findprice = array();
+
+foreach($price as $row){
+$findprice[$row->JourneyConnectionReference]=$row;
+}
+
+foreach($triplist->JourneyAdvices as $key => $refid){
+$triplist->JourneyAdvices[$key]->PriceData = $findprice[$refid->JourneyConnectionReference];
+}
 
 fclose($temp);
+
+print json_encode($triplist);
+
 //  https://boka.snalltaget.se/api/locations/all
 // 'https://boka.snalltaget.se/boka-biljett#!/step1?from=1&to=120&date=2013-12-15';
 
