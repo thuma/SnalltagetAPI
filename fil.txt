@@ -1,0 +1,1 @@
+[{"JourneyConnectionReference":892272150,"LowestTotalPrice":746.00,"Currency":"SEK","IsSleeperTrain":false}]
