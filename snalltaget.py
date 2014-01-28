@@ -6,7 +6,7 @@ r = requests.get('https://boka.snalltaget.se/boka-biljett')
 cookie = r.cookies["Token"]
 cookies = dict(Token=cookie)
 
-query = json.loads('{"DepartureLocationId":1,"DepartureLocationProducerCode":74,"ArrivalLocationId":120,"ArrivalLocationProducerCode":74,"DepartureDateTime":"2014-02-21 12:00","TravelType":"E","Passengers":[{"PassengerCategory":"VU"}]}')
+query = json.loads('{"DepartureLocationId":1,"DepartureLocationProducerCode":74,"ArrivalLocationId":110,"ArrivalLocationProducerCode":74,"DepartureDateTime":"2014-02-21 12:00","TravelType":"E","Passengers":[{"PassengerCategory":"VU"}]}')
 
 headers = {'content-type': 'application/json'}
 
@@ -29,4 +29,13 @@ r = requests.post('https://boka.snalltaget.se/api/journeyadvices/lowestprices', 
 
 price = r.json()
 
+for i in range(0, len(trips['JourneyAdvices'])):
+	for j in range (0,len(price)):
+		if price[j]['JourneyConnectionReference'] == trips['JourneyAdvices'][i]['JourneyConnectionReference']:
+			trips['JourneyAdvices'][i]['IsSleeperTrain'] = price[j]['IsSleeperTrain']
+			trips['JourneyAdvices'][i]['LowestTotalPrice'] = price[j]['LowestTotalPrice']
+			trips['JourneyAdvices'][i]['Currency'] = price[j]['Currency']
+			break
+
+print json.dumps(trips)
    
