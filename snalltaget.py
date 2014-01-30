@@ -40,16 +40,13 @@ class MainHandler(tornado.web.RequestHandler):
 	
 	def makerequest(self):
 		global cache
-		r = requests.get('https://boka.snalltaget.se/boka-biljett')
-		cookie = r.cookies["Token"]
-		cookies = dict(Token=cookie)
-		
+
 		query = {}
 		
 		#query = json.loads('{"DepartureLocationId":1,"DepartureLocationProducerCode":74,"ArrivalLocationId":110,"ArrivalLocationProducerCode":74,"DepartureDateTime":"2014-02-21 12:00","TravelType":"E","Passengers":[{"PassengerCategory":"VU"}]}')
 		
 		try:
-			query['DepartureDateTime'] = self.get_argument('date') +' '+ self.get_argument('departureTime')
+			query['DepartureDateTime'] = self.get_argument('date') +' '+ self.get_argument('departureTime')[:2]+':00'
 			getdate = self.get_argument('date')
 			gettime = self.get_argument('departureTime')
 		except:
@@ -80,20 +77,24 @@ class MainHandler(tornado.web.RequestHandler):
 			return ''
 		except:
 			notfound = 1
-			
+		
+		r = requests.get('https://boka.snalltaget.se/boka-biljett')
+		cookie = r.cookies["Token"]
+		cookies = dict(Token=cookie)
+		
 		headers = {'content-type': 'application/json'}
 
 		r = requests.post('https://boka.snalltaget.se/api/timetables', data=json.dumps(query), headers=headers, cookies=cookies)
 
 		trips = r.json()
-		
+			
 		try:
 			if len(trips['JourneyAdvices']) > 10:
 				max = 10
 			else:
-				max = len(trips['JourneyAdvices']-1)
+				max = len(trips['JourneyAdvices'])
 		except:
-			self.returnerror('No trip found')
+			self.returnerror('No trip found list empty')
 			return ''
 			
 		pquery = {'TimetableId':trips['Id'], 'JourneyConnectionReferences':[]}
