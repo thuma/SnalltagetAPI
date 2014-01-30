@@ -21,7 +21,7 @@ class MainHandler(tornado.web.RequestHandler):
 		"price":"101",
 		"currency":"SEK",
 		"validPrice":True,
-		"url":"https://boka.snalltaget.se/boka-biljett","sellername":'Snälltåget'}
+		"url":"https://boka.snalltaget.se/boka-biljett#!/step1?from="+str(data['DepartureLocation']['LocationId'])+"&to="+str(data['ArrivalLocation']['LocationId'])+"&date="+data['DepartureDateTime'][:10],"sellername":'Snälltåget'}
 		
 		outdata['departureTime'] = data['DepartureDateTime'][11:16]
 		outdata['arrivalTime'] = data['ArrivalDateTime'][11:16]
