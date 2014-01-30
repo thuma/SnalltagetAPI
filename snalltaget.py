@@ -5,12 +5,18 @@ import tornado.ioloop
 import tornado.web
 from threading import Thread
 
+cache = {}
+
 class MainHandler(tornado.web.RequestHandler):
 	@tornado.web.asynchronous
 	def get(self):
 		Thread(target=self.makerequest).start()
+		
+	def returnrequest(self, data):
+		tornado.ioloop.IOLoop.instance().add_callback(self.returndata, data)
 	
 	def makerequest(self):
+		global cache
 		r = requests.get('https://boka.snalltaget.se/boka-biljett')
 		cookie = r.cookies["Token"]
 		cookies = dict(Token=cookie)
@@ -43,8 +49,14 @@ class MainHandler(tornado.web.RequestHandler):
 					trips['JourneyAdvices'][i]['IsSleeperTrain'] = price[j]['IsSleeperTrain']
 					trips['JourneyAdvices'][i]['LowestTotalPrice'] = price[j]['LowestTotalPrice']
 					trips['JourneyAdvices'][i]['Currency'] = price[j]['Currency']
+					stopfrom = str(trips['JourneyAdvices'][i]['DepartureLocation']['ProducerCode']*100000 + trips['JourneyAdvices'][i]['DepartureLocation']['LocationId'])
+					stopto = str(trips['JourneyAdvices'][i]['ArrivalLocation']['ProducerCode']*100000 +trips['JourneyAdvices'][i]['ArrivalLocation']['LocationId'])
+					timefrom = trips['JourneyAdvices'][i]['DepartureDateTime']
+					timeto = trips['JourneyAdvices'][i]['ArrivalDateTime']
+					cache[stopfrom+timefrom+stopto+timeto] = trips['JourneyAdvices'][i]
 					break
-		tornado.ioloop.IOLoop.instance().add_callback(self.returndata, trips)
+		print cache
+		self.returnrequest(trips)
 		
 	def returndata(self, trips):
 		self.write(trips)
