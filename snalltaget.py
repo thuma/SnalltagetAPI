@@ -138,7 +138,7 @@ class MainHandler(tornado.web.RequestHandler):
 					cache[datefrom+stopfrom+timefrom+stopto+timeto] = trips['JourneyAdvices'][i]
 					break
 		try:
-			self.returnrequest(cache[getfrom+getdate+gettime+getto])
+			self.returnrequest(cache[getdate+getfrom+gettime+getto+gettotime])
 			return ''
 		except:
 			self.returnerror('Trip not found in search')
