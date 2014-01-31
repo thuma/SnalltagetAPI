@@ -10,6 +10,16 @@ from threading import Thread
 
 cache = {}
 
+stops = open('snalltaget.json')
+stops = json.load(stops)
+stopsa = {}
+for stop in stops['stops']:
+	stopsa[str(stop['P']*100000+stop['L'])] = stop['N']
+
+stops = {}
+
+
+
 class MainHandler(tornado.web.RequestHandler):
 	@tornado.web.asynchronous
 	def get(self):
@@ -40,10 +50,9 @@ class MainHandler(tornado.web.RequestHandler):
 	
 	def makerequest(self):
 		global cache
+		global stopsa
 
 		query = {}
-		
-		#query = json.loads('{"DepartureLocationId":1,"DepartureLocationProducerCode":74,"ArrivalLocationId":110,"ArrivalLocationProducerCode":74,"DepartureDateTime":"2014-02-21 12:00","TravelType":"E","Passengers":[{"PassengerCategory":"VU"}]}')
 		
 		try:
 			query['DepartureDateTime'] = self.get_argument('date') +' '+ self.get_argument('departureTime')[:2]+':00'
@@ -55,6 +64,7 @@ class MainHandler(tornado.web.RequestHandler):
 			
 		try:
 			getfrom = self.get_argument('from')
+			fromname = stopsa[getfrom]
 			query['DepartureLocationId'] = int(getfrom[-5:])
 			query['DepartureLocationProducerCode'] = int(getfrom[:2])
 		except:
@@ -63,17 +73,24 @@ class MainHandler(tornado.web.RequestHandler):
 		
 		try:
 			getto = self.get_argument('to')
+			toname = stopsa[getto]
 			query['ArrivalLocationId'] = int(getto[-5:])
 			query['ArrivalLocationProducerCode'] = int(getto[:2])
 		except:
 			self.returnerror('Missing arrival station')
+			return ''
+
+		try:
+			gettotime = self.get_argument('arrivalTime')
+		except:
+			self.returnerror('Missing arrivalTime HH:MM')
 			return ''
 			
 		query['TravelType'] = "E"
 		query['Passengers'] = [{"PassengerCategory":"VU"}]
 		
 		try:
-			self.returnrequest(cache[getfrom+getdate+gettime+getto])
+			self.returnrequest(cache[getdate+getfrom+gettime+getto+gettotime])
 			return ''
 		except:
 			notfound = 1
@@ -116,8 +133,9 @@ class MainHandler(tornado.web.RequestHandler):
 					stopto = str(trips['JourneyAdvices'][i]['ArrivalLocation']['ProducerCode']*100000 +trips['JourneyAdvices'][i]['ArrivalLocation']['LocationId'])
 					datefrom = trips['JourneyAdvices'][i]['DepartureDateTime'][:10]
 					timefrom = trips['JourneyAdvices'][i]['DepartureDateTime'][11:16]
+					timeto = trips['JourneyAdvices'][i]['ArrivalDateTime'][11:16]
 					trips['JourneyAdvices'][i]['ArrivalDateTime']
-					cache[stopfrom+datefrom+timefrom+stopto] = trips['JourneyAdvices'][i]
+					cache[datefrom+stopfrom+timefrom+stopto+timeto] = trips['JourneyAdvices'][i]
 					break
 		try:
 			self.returnrequest(cache[getfrom+getdate+gettime+getto])
@@ -136,3 +154,4 @@ application = tornado.web.Application([
 
 application.listen(8888)
 tornado.ioloop.IOLoop.instance().start()
+
