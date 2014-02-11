@@ -19,6 +19,9 @@ for stop in stops['stops']:
 stops = {}
 
 
+class CachePrint(tornado.web.RequestHandler):
+	def get(self):
+		self.write(cache)
 
 class MainHandler(tornado.web.RequestHandler):
 	@tornado.web.asynchronous
@@ -150,6 +153,7 @@ class MainHandler(tornado.web.RequestHandler):
 
 application = tornado.web.Application([
     (r"/snalltaget/", MainHandler),
+    (r"/snalltaget/cache/", CachePrint),
 ])
 
 application.listen(8888)
